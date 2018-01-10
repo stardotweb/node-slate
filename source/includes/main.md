@@ -1,31 +1,28 @@
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+This document describes the API specification and wire protocols for the Whiteboard feature of the LiveHelp product.
+It describes bindings for Native and Web platforms of the LiveHelp product! 
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
-
-This example API documentation page was created with [Slate](https://github.com/tripit/slate). Feel free to edit it and use it as a base for your own API's documentation.
+The source for this API documentation can be found [here](https://github.com/stardotweb/node-slate).
 
 # Authentication
 
 > To authorize, use this code:
 
-```ruby
-require 'kittn'
+```objectivec
+#import <UIKit/UIKit.h>
+#import "Dependency.h"
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
+@protocol WorldDataSource
+@optional
+- (NSString*)worldName;
+@required
+- (BOOL)allowsToLive;
+@end
 
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-```
-
-```bash
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
+@property (nonatomic, readonly) NSString *title;
+- (IBAction) show;
+@end
 ```
 
 ```javascript
@@ -46,34 +43,154 @@ Kittn expects for the API key to be included in all API requests to the server i
 You must replace <code>meowmeowmeow</code> with your personal API key.
 </aside>
 
-# Kittens
 
-## Get All Kittens
+# Broadcasts
 
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
+## Typical Broadcast Message Structure
+```json
+{
+    "id":"<uuid>",
+    "origin": "<uuid>",
+    "timestamp": 1234567890,
+    "type": "<message_type>",
+    "message": {}
+}
 ```
+Broadcast Body | Description
+-------------- | -----------
+id | The unique message identifier
+origin | The identifier of the client originating the broadcast. For system-initiated broadcasts, this field would be `null`
+timestamp | The timestamp of the initiation of the message
+type | The message type or name
+message | The optional message body
 
-```python
-import kittn
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
+# Whiteboard Broadcasts
+
+## Initialize Canvas
+
+```json
+{
+    "id":"<uuid>",
+    "origin": null,
+    "timestamp": 1234567890,
+    "type": "canvas_init",
+    "message": {
+        "width": 1920,
+        "height": 1080,
+        "assignedColor": "red",
+        "capabilities": [
+            "tools_freehand",
+            "tools_circle",
+            "tools_rectangle",
+            "tools_line",
+            "tools_arrow",
+            "clear",
+            "clear_others",
+            "clear_all"
+        ]
+    }
+}
 ```
+Initialize the canvas on the client. The message body suggests the following - 
 
-```bash
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
+Message Body | Default | Description
+------------ | ------- | -----------
+width + height | - | The aspect ratio to render the canvas with
+assignedColor | - | The unique-within-a-session color that this client has been assigned for this session. Used to easily distinguish/identify collaborators
+capabilities | [] | The list of capabilities that this client session can perform. 
+
+<aside class="info">
+The `capabilities` list is used to limit features on a per-client-per-session basis. This is determined by the system based on various factors like client/platform limitations, subscription model, etc.
+</aside>
+
+
+## Clear Canvas
+```json
+{
+    "id":"<uuid>",
+    "origin": "<uuid>",
+    "timestamp": 1234567890,
+    "type": "canvas_clear",
+    "message": {
+      "forOrigin": "<uuid>"
+    }
+}
 ```
+Clear annotations from the canvas - from a particular origin/client or for all 
+
+Message Body | Default | Description
+------------ | ------- | -----------
+forOrigin | - | The client for which all annotations should be cleared. 
+
+<aside class="info">
+In this case, the message body is optional. If no `forOrigin` is provided, all annotations for all origins are to be cleared
+</aside>
+
+## Add Annotation - Line
+```json
+{
+    "id":"<uuid>",
+    "origin": "<uuid>",
+    "timestamp": 1234567890,
+    "type": "annotation_add",
+    "message": {
+        "type": "line",
+        "draw": {
+          "x1": 14, "y1": 18,
+          "x2": 18, "y2": 14,
+          "strokeWidth": 5,
+          "strokeColor": "red",
+          "fillColor": "red"
+        }
+    }
+}
+```
+> In order to add a line as an arrow, one or both of `markerStart` and `markerEnd` can be additionally provided - 
+
+```json
+{
+    "id":"<uuid>",
+    "origin": "<uuid>",
+    "timestamp": 1234567890,
+    "type": "annotation_add",
+    "message": {
+        "type": "line",
+        "draw": {
+          "markerStart": "none",
+          "markerEnd": "arrow",
+          "x1": 14, "y1": 18,
+          "x2": 18, "y2": 14,
+          "strokeWidth": 5,
+          "strokeColor": "red",
+          "fillColor": "red"
+        }
+    }
+}
+```
+Add a line/arrow annotation to the canvas
+
+Message Body | Default | Description
+------------ | ------- | -----------
+type | - | The type of annotation added to the canvas
+draw | {x1, y1, } | Information specific to drawing of the annotation. 
+draw.x1 + draw.y1 | - | Start
+
+
+
+
+## Initialize Canvas
+## Initialize Canvas
+
+
 
 ```javascript
-const kittn = require('kittn');
+import {Auth} from "livehelp";
 
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
+let Api = Auth.authorize("<client_uuid>");
+
+let whiteboard = Api.whiteboard.create();
+
 ```
 
 > The above command returns JSON structured like this:
@@ -167,3 +284,6 @@ This endpoint retrieves a specific kitten.
 Parameter | Description
 --------- | -----------
 ID | The ID of the kitten to retrieve
+
+
+

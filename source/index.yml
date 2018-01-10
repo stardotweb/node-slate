@@ -1,4 +1,4 @@
-title: LiveHelp Whiteboard API Reference
+title: LiveHelp Product API Reference
 
 language_tabs:
   - objectivec
@@ -10,6 +10,7 @@ toc_footers:
 includes:
   - intro
   - api
+  - broadcasts
 
 search: true
 

@@ -1,6 +1,6 @@
 # Broadcasts
 
-## Typical Broadcast Message Structure
+## Typical Broadcast Structure
 ```json
 {
     "id":"<uuid>",
@@ -17,6 +17,51 @@ origin | The identifier of the client originating the broadcast. For system-init
 timestamp | The timestamp of the initiation of the message
 type | The message type or name
 message | The optional message body
+
+
+# Room Broadcasts
+
+## Collaborator Joined
+```json
+{
+    "id":"<uuid>",
+    "origin": null,
+    "timestamp": 1234567890,
+    "type": "user_joined",
+    "message": {
+        "id": "<uuid>",
+        "displayName": "John Hancock",
+        "color": "#00ff00"
+    }
+}
+```
+Notification of a collaborator joining the whiteboard room. The message body suggests the following - 
+
+Message Body | Description
+------------ | -----------
+id | UUID of the collaborator
+color | The unique-within-a-session color that the user has been assigned for this session. Used to easily distinguish/identify collaborators
+displayName | The name to be displayed for this user
+
+
+
+## Collaborator Left
+```json
+{
+    "id":"<uuid>",
+    "origin": null,
+    "timestamp": 1234567890,
+    "type": "user_left",
+    "message": {
+        "id": "<uuid>"
+    }
+}
+```
+Notification of a collaborator leaving the whiteboard room.
+
+Message Body | Description
+------------ | -----------
+id | UUID of the collaborator that left
 
 
 # Whiteboard Broadcasts
@@ -63,22 +108,16 @@ The `capabilities` list is used to limit features on a per-client-per-session ba
 ```json
 {
     "id":"<uuid>",
-    "origin": "<uuid>",
+    "origin": "<uuid> | null",
     "timestamp": 1234567890,
-    "type": "canvas_clear",
-    "message": {
-      "forOrigin": "<uuid>"
-    }
+    "type": "canvas_clear"
 }
 ```
-Clear annotations from the canvas - from a particular origin/client or for all 
-
-Message Body | Default | Description
------------- | ------- | -----------
-forOrigin | - | The client for which all annotations should be cleared. 
+Clear annotations from the canvas - ones that originated from a particular origin/client or all
 
 <aside class="info">
-In this case, the message body is optional. If no `forOrigin` is provided, all annotations for all origins are to be cleared
+If `origin` is provided, all annotations from that collaborator are to be cleared. <br>
+If `origin` is `null`, all annotations from all collaborators are to be cleared. <br>
 </aside>
 
 ## Add Annotation - Line
@@ -91,11 +130,11 @@ In this case, the message body is optional. If no `forOrigin` is provided, all a
     "message": {
         "type": "line",
         "draw": {
-          "x1": 14, "y1": 18,
-          "x2": 18, "y2": 14,
-          "strokeWidth": 5,
-          "strokeColor": "red",
-          "fillColor": "red"
+        "x1": 14, "y1": 18,
+        "x2": 18, "y2": 14,
+        "strokeWidth": 5,
+        "strokeColor": "red",
+        "fillColor": "red"
         }
     }
 }

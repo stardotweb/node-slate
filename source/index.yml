@@ -8,9 +8,8 @@ toc_footers:
   - <a href='https://github.com/stardotweb/node-slate'>Documentation Source</a>
 
 includes:
-  - notes
-  - main
-  - _errors
+  - intro
+  - api
 
 search: true
 
